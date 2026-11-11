@@ -48,6 +48,24 @@ Use a fresh testnet-only wallet. Testnet ETH: https://faucet.testnet.chain.robin
 
 The canonical Morpho Blue address (`0xBBBB…FFCb`) has no code on this testnet. The Morpho instance above was deployed by a third-party project, so it is a stand-in, not an official deployment.
 
+### Live demo (testnet)
+
+[`script/LiveDemo.s.sol`](script/LiveDemo.s.sol) runs the full flow onchain from one wallet. It creates a Morpho market (borrow dUSD against dSTOCK, LLTV 77%), opens a position, opts into WeekendGuard, drops the oracle price, and lets `protect()` restore the position.
+
+| Step | Health factor |
+|---|---|
+| 10 dSTOCK collateral at $200, 1,200 dUSD debt | 1.283 |
+| Oracle drops to $170 | **1.091** (below trigger 1.15) |
+| `protect()` adds 2.834 dSTOCK (keeper fee 0.0085) | **1.400** (target) |
+
+- `protect` tx: [`0x41fa79d2…bacbeee`](https://explorer.testnet.chain.robinhood.com/tx/0x41fa79d23fa1651df798faf066251c265780c82f49377c63507e759a8bacbeee)
+- Market id: `0x7b0758e06eac7771c83af65c54a485fe249cf82965069ecdb53f0caf7e50facd`
+- dSTOCK `0x86AbadcaCeb21d2b34FA451b17E2b5B633819324`, dUSD `0xeEeFe2BDBb6C7EB28D5CC2ecCd7c7F93D0136448`, oracle `0x645306e7e05F6316D9026e14Dee7e7dEe7034348` (demo mocks, freely mintable / settable)
+
+```bash
+forge script script/LiveDemo.s.sol --rpc-url robinhood_testnet --broadcast --interactive
+```
+
 ## How it works
 
 1. User calls `setConfig(marketId, config)` and approves the guard on the collateral token (or loan token for REPAY mode).
@@ -63,6 +81,7 @@ src/interfaces/IMorpho.sol    minimal Morpho Blue interface
 test/WeekendGuard.t.sol       Foundry tests
 test/mocks/Mocks.sol          mock Morpho / oracle / tokens
 script/Deploy.s.sol           deployment script
+script/LiveDemo.s.sol         end-to-end testnet demo
 docs/SPEC.md                  specification
 ```
 
